@@ -1,0 +1,56 @@
+.market__item {
+    margin-bottom: 20px;
+    list-style-type: none;
+}
+.market__item .market_li_card :only-child {
+    display: flex;
+    align-items: center;
+}
+.market_li_card .market_li_description {
+    flex-direction: column;
+    height: 50px;
+    justify-content: space-between;
+}
+.market_li_description p span {
+    margin-left: 6px;
+}
+.market_description_content {
+    width: 500px;
+    justify-content: space-between;
+}
+.market_li_btn {
+    margin-left: auto;
+}
+.col-with-img {
+    display: flex;
+}
+.col-with-img img {
+    margin-left: 4px;
+    padding-bottom: 1px;
+}
+.market_description_checked {
+    /* position: absolute; */
+    /* right: 360px; */
+}
+.eth_container {
+    display: flex;
+}
+.eth_img {
+    width: 23px;
+    margin-left: 5px;
+}
+/* ----------------------admin------------------------ */
+
+.my_list_nft {
+    display: flex;
+    width: 60%;
+    justify-content: space-around;
+}
+.form_admin {
+    min-width: 400px;
+    min-height: 400px;
+    margin-top: 16px;
+}
+.form_input{
+   margin-top: 18px;
+}
