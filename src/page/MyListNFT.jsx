@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Avatar, Card, Button, Row, Col, Input, Form } from "antd";
+import { Avatar, Card, Button, Row, Col, Input, Form, Modal } from "antd";
 import { alchemy, sliceString } from "../function/MyFunction";
 import axios from "axios";
 import verified from "../image/verified.png";
@@ -12,6 +12,8 @@ const MyListNFT = () => {
     const [localdata, setLocaldata] = useState([]);
     const [currentNFT, setCurrentNFT] = useState();
     const [form] = Form.useForm();
+    const [openModal, setOpenModal] = useState(false);
+    const [delNFT, setDelNFT] = useState();
     useEffect(() => {
         const GetNftLocal = async () => {
             await axios.get("http://localhost:5000/nfts").then(
@@ -37,20 +39,22 @@ const MyListNFT = () => {
         }
     }, [isCallingApi]);
     const onOk = async () => {
-        if (currentNFT && currentNFT.address === form.getFieldValue("address").toLowerCase()) {
+        if (
+            currentNFT &&
+            currentNFT.address === form.getFieldValue("address").toLowerCase()
+        ) {
             await axios
-            .post("http://localhost:5000/nfts", {
-                webAddress: form.getFieldValue("address"),
-            })
-            .then(function (response) {
-                console.log(response);
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
-        }   
+                .post("http://localhost:5000/nfts", {
+                    webAddress: form.getFieldValue("address"),
+                })
+                .then(function (response) {
+                    console.log(response);
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        }
         form.submit();
-
     };
     const onChangeAddress = async () => {
         const data = await alchemy.nft.getContractMetadata(
@@ -59,6 +63,26 @@ const MyListNFT = () => {
         if (data) {
             setCurrentNFT(data);
         }
+    };
+    const onclickDel = (data) => {
+        setOpenModal(true);
+        setDelNFT(data);
+        // console.log(data);
+    };
+    const handleCancel = () => {
+        setOpenModal(false);
+    };
+    const deleteNFT = async () => {
+        await axios.delete(`http://localhost:5000/nfts/${delNFT.webAddress}`).then(
+            (response) => {
+                console.log(response);
+            },
+            (error) => {
+                console.log(error);
+            }
+        );
+        setOpenModal(false);
+        setIsCallingApi(true);
     };
     return (
         <div className="my_list_nft">
@@ -99,7 +123,7 @@ const MyListNFT = () => {
                                 <Row className="market_description_content">
                                     <Col className="col-with-img">
                                         Fool price {nftData.price}
-                                        <img src={ethLogo} />
+                                        <img src={ethLogo} alt="nft-logo" />
                                     </Col>
                                     <Col>
                                         <p style={{ display: "inline" }}>
@@ -112,7 +136,19 @@ const MyListNFT = () => {
                                         {sliceString(
                                             localdata[index]?.price / 3
                                         )}
-                                        <img src={ethLogo} />
+                                        <img src={ethLogo} alt="nt-logo" />
+                                    </Col>
+                                    <Col className="delete_btn">
+                                        <Button
+                                            type="primary"
+                                            htmlType="submit"
+                                            danger
+                                            onClick={() => {
+                                                onclickDel(localdata[index]);
+                                            }}
+                                        >
+                                            Delete
+                                        </Button>
                                     </Col>
                                 </Row>
                             </Row>
@@ -141,9 +177,7 @@ const MyListNFT = () => {
                                 },
                             ]}
                         >
-                            <Input
-                                onChange={onChangeAddress}
-                            />
+                            <Input onChange={onChangeAddress} />
                         </Form.Item>
                         <Form.Item
                             wrapperCol={{
@@ -162,6 +196,14 @@ const MyListNFT = () => {
                     </Form>
                 </Card>
             </div>
+            <Modal
+                title="You sure want to delete"
+                open={openModal}
+                onOk={deleteNFT}
+                onCancel={handleCancel}
+            >
+                <p>Do this action you will delete NFT</p>
+            </Modal>
         </div>
     );
 };

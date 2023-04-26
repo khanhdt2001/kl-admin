@@ -54,3 +54,12 @@
 .form_input{
    margin-top: 18px;
 }
+
+
+/* btn------delete */
+.delete_btn {
+    display: flex;
+    position: absolute;
+    right: 20px;
+    top: 10px;
+}
