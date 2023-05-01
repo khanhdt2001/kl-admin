@@ -14,6 +14,8 @@ const MyListNFT = () => {
     const [form] = Form.useForm();
     const [openModal, setOpenModal] = useState(false);
     const [delNFT, setDelNFT] = useState();
+    const [metaDataa, setMetadata] = useState();
+    const [popUpTitle, setPopUpTitle] = useState("")
     useEffect(() => {
         const GetNftLocal = async () => {
             await axios.get("http://localhost:5000/nfts").then(
@@ -64,23 +66,27 @@ const MyListNFT = () => {
             setCurrentNFT(data);
         }
     };
-    const onclickDel = (data) => {
+    const onclickDel = (data, beta) => {
         setOpenModal(true);
         setDelNFT(data);
+        setMetadata(beta);
+        setPopUpTitle(`You want to delete ${beta?.name} ?`)
         // console.log(data);
     };
     const handleCancel = () => {
         setOpenModal(false);
     };
     const deleteNFT = async () => {
-        await axios.delete(`http://localhost:5000/nfts/${delNFT.webAddress}`).then(
-            (response) => {
-                console.log(response);
-            },
-            (error) => {
-                console.log(error);
-            }
-        );
+        await axios
+            .delete(`http://localhost:5000/nfts/${delNFT.webAddress}`)
+            .then(
+                (response) => {
+                    console.log(response);
+                },
+                (error) => {
+                    console.log(error);
+                }
+            );
         setOpenModal(false);
         setIsCallingApi(true);
     };
@@ -144,7 +150,10 @@ const MyListNFT = () => {
                                             htmlType="submit"
                                             danger
                                             onClick={() => {
-                                                onclickDel(localdata[index]);
+                                                onclickDel(
+                                                    localdata[index],
+                                                    listNft[index]
+                                                );
                                             }}
                                         >
                                             Delete
@@ -197,11 +206,19 @@ const MyListNFT = () => {
                 </Card>
             </div>
             <Modal
-                title="You sure want to delete"
+                title= {popUpTitle}
                 open={openModal}
                 onOk={deleteNFT}
                 onCancel={handleCancel}
             >
+                <Meta
+                    avatar={
+                        <Avatar
+                            size={64}
+                            src={metaDataa?.openSea.imageUrl}
+                        />
+                    }
+                />
                 <p>Do this action you will delete NFT</p>
             </Modal>
         </div>
