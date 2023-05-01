@@ -15,7 +15,8 @@ const MyListNFT = () => {
     const [openModal, setOpenModal] = useState(false);
     const [delNFT, setDelNFT] = useState();
     const [metaDataa, setMetadata] = useState();
-    const [popUpTitle, setPopUpTitle] = useState("")
+    const [popUpTitle, setPopUpTitle] = useState("");
+    const [msg, setMsg] = useState("");
     useEffect(() => {
         const GetNftLocal = async () => {
             await axios.get("http://localhost:5000/nfts").then(
@@ -41,21 +42,8 @@ const MyListNFT = () => {
         }
     }, [isCallingApi]);
     const onOk = async () => {
-        if (
-            currentNFT &&
-            currentNFT.address === form.getFieldValue("address").toLowerCase()
-        ) {
-            await axios
-                .post("http://localhost:5000/nfts", {
-                    webAddress: form.getFieldValue("address"),
-                })
-                .then(function (response) {
-                    console.log(response);
-                })
-                .catch(function (error) {
-                    console.log(error);
-                });
-        }
+        console.log("calling smart contract");
+
         form.submit();
     };
     const onChangeAddress = async () => {
@@ -70,7 +58,8 @@ const MyListNFT = () => {
         setOpenModal(true);
         setDelNFT(data);
         setMetadata(beta);
-        setPopUpTitle(`You want to delete ${beta?.name} ?`)
+        setPopUpTitle(`You want to delete ${beta?.name} ?`);
+        setMsg("You want to delete this NFT");
         // console.log(data);
     };
     const handleCancel = () => {
@@ -184,9 +173,37 @@ const MyListNFT = () => {
                                     required: true,
                                     message: "Please input NFT address!",
                                 },
+                                {
+                                    validator: async (rule, value) => {
+                                        await axios
+                                            .post(
+                                                "http://localhost:5000/nfts",
+                                                {
+                                                    webAddress: value,
+                                                }
+                                            )
+                                            .then(function (response) {
+                                                if (
+                                                    response.data ===
+                                                    "found in supported NFT"
+                                                ) {
+                                                    onChangeAddress();
+                                                }
+                                                console.log(response);
+                                            })
+                                            .catch(function (error) {
+                                                console.log("error", error);
+                                                return Promise.reject(
+                                                   "This NFT does not meet the requirement"
+                                                );
+                                            });
+
+                                        return Promise.resolve();
+                                    },
+                                },
                             ]}
                         >
-                            <Input onChange={onChangeAddress} />
+                            <Input />
                         </Form.Item>
                         <Form.Item
                             wrapperCol={{
@@ -206,20 +223,17 @@ const MyListNFT = () => {
                 </Card>
             </div>
             <Modal
-                title= {popUpTitle}
+                title={popUpTitle}
                 open={openModal}
                 onOk={deleteNFT}
                 onCancel={handleCancel}
             >
                 <Meta
                     avatar={
-                        <Avatar
-                            size={64}
-                            src={metaDataa?.openSea.imageUrl}
-                        />
+                        <Avatar size={64} src={metaDataa?.openSea.imageUrl} />
                     }
                 />
-                <p>Do this action you will delete NFT</p>
+                <p>{msg}</p>
             </Modal>
         </div>
     );
