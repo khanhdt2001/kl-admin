@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Avatar, Card, Button, Row, Col, Input, Form, Modal } from "antd";
-import { alchemy, sliceString } from "../function/MyFunction";
+import {
+    alchemy,
+    sliceString,
+    RegisterNFT,
+    UnRegisterNFT,
+} from "../function/MyFunction";
 import axios from "axios";
 import verified from "../image/verified.png";
 import ethLogo from "../image/ethereum.png";
 import "../css/MyListNFT.css";
+const { ethereum } = window;
 const { Meta } = Card;
 const MyListNFT = () => {
     const [isCallingApi, setIsCallingApi] = useState(true);
@@ -17,6 +23,9 @@ const MyListNFT = () => {
     const [metaDataa, setMetadata] = useState();
     const [popUpTitle, setPopUpTitle] = useState("");
     const [msg, setMsg] = useState("");
+    const [nftAddress, setNftAddress] = useState("");
+    const [confirmLoading, setConfirmLoading] = useState(false);
+    const [isBtnLoading, setisBtnLoading] = useState(false);
     useEffect(() => {
         const GetNftLocal = async () => {
             await axios.get("http://localhost:5000/nfts").then(
@@ -43,8 +52,29 @@ const MyListNFT = () => {
     }, [isCallingApi]);
     const onOk = async () => {
         console.log("calling smart contract");
+        var addressData;
+        const listAccount = await ethereum.request({
+            method: "eth_requestAccounts",
+        });
+        addressData = listAccount[0];
+        setisBtnLoading(true);
+        try {
+            const res = await RegisterNFT(
+                addressData,
+                form.getFieldValue("address")
+            );
+            setTimeout(() => {
+                setIsCallingApi(true);
+                form.resetFields();
+                setCurrentNFT();
+                setisBtnLoading(false);
+            }, 3000);
+            console.log(res);
+        } catch (error) {
+            console.log(error);
+            setisBtnLoading(false);
 
-        form.submit();
+        }
     };
     const onChangeAddress = async () => {
         const data = await alchemy.nft.getContractMetadata(
@@ -60,24 +90,33 @@ const MyListNFT = () => {
         setMetadata(beta);
         setPopUpTitle(`You want to delete ${beta?.name} ?`);
         setMsg("You want to delete this NFT");
-        // console.log(data);
     };
     const handleCancel = () => {
         setOpenModal(false);
     };
     const deleteNFT = async () => {
-        await axios
-            .delete(`http://localhost:5000/nfts/${delNFT.webAddress}`)
-            .then(
-                (response) => {
-                    console.log(response);
-                },
-                (error) => {
-                    console.log(error);
-                }
-            );
-        setOpenModal(false);
-        setIsCallingApi(true);
+        var addressData;
+        const listAccount = await ethereum.request({
+            method: "eth_requestAccounts",
+        });
+        addressData = listAccount[0];
+        setConfirmLoading(true);
+        try {
+            const res = await UnRegisterNFT(addressData, delNFT.webAddress);
+            console.log("res", res);
+            setTimeout(() => {
+                setIsCallingApi(true);
+                setOpenModal(false);
+            setConfirmLoading(false);
+
+            }, 3000);
+            console.log(res);
+        } catch (error) {
+            setConfirmLoading(false);
+
+            console.log(error);
+        }
+
     };
     return (
         <div className="my_list_nft">
@@ -168,6 +207,7 @@ const MyListNFT = () => {
                         <Form.Item
                             label="NFT address"
                             name="address"
+                            value={nftAddress}
                             rules={[
                                 {
                                     required: true,
@@ -175,6 +215,7 @@ const MyListNFT = () => {
                                 },
                                 {
                                     validator: async (rule, value) => {
+                                        console.log("validate nft", value);
                                         await axios
                                             .post(
                                                 "http://localhost:5000/nfts",
@@ -189,12 +230,11 @@ const MyListNFT = () => {
                                                 ) {
                                                     onChangeAddress();
                                                 }
-                                                console.log(response);
                                             })
                                             .catch(function (error) {
                                                 console.log("error", error);
                                                 return Promise.reject(
-                                                   "This NFT does not meet the requirement"
+                                                    "This NFT does not meet the requirement"
                                                 );
                                             });
 
@@ -215,6 +255,7 @@ const MyListNFT = () => {
                                 type="primary"
                                 htmlType="submit"
                                 onClick={onOk}
+                                loading= {isBtnLoading}
                             >
                                 Submit
                             </Button>
@@ -227,6 +268,7 @@ const MyListNFT = () => {
                 open={openModal}
                 onOk={deleteNFT}
                 onCancel={handleCancel}
+                confirmLoading={confirmLoading}
             >
                 <Meta
                     avatar={
